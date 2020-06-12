@@ -5,6 +5,7 @@ namespace Encore\Admin\Form;
 use Closure;
 use Encore\Admin\Admin;
 use Encore\Admin\Form;
+use Encore\Admin\Widgets\Form as WidgetForm;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Support\Arr;
@@ -459,6 +460,20 @@ class Field implements Renderable
     }
 
     /**
+     * Set Widget/Form as field parent.
+     *
+     * @param WidgetForm $form
+     *
+     * @return $this
+     */
+    public function setWidgetForm(WidgetForm $form)
+    {
+        $this->form = $form;
+
+        return $this;
+    }
+
+    /**
      * Set width for field and label.
      *
      * @param int $field
@@ -527,6 +542,8 @@ class Field implements Renderable
         if (!in_array('required', $rules, true)) {
             return;
         }
+
+        $this->setLabelClass(['asterisk']);
 
         // Only text field has `required` attribute.
         if (!$this instanceof Form\Field\Text) {
@@ -702,7 +719,7 @@ class Field implements Renderable
             $rules = array_filter(explode('|', $rules));
         }
 
-        if (!$this->form) {
+        if (!$this->form || !$this->form instanceof Form) {
             return $rules;
         }
 
@@ -761,9 +778,9 @@ class Field implements Renderable
     /**
      * Get key for error message.
      *
-     * @return string
+     * @return string|array
      */
-    public function getErrorKey(): string
+    public function getErrorKey()
     {
         return $this->errorKey ?: $this->column;
     }
@@ -805,9 +822,9 @@ class Field implements Renderable
      *
      * @param array $data
      *
-     * @return $this
+     * @return mixed
      */
-    public function data(array $data = null): self
+    public function data(array $data = null)
     {
         if ($data === null) {
             return $this->data;
@@ -1086,11 +1103,23 @@ class Field implements Renderable
     /**
      * Get placeholder.
      *
-     * @return string
+     * @return mixed
      */
-    public function getPlaceholder(): string
+    public function getPlaceholder()
     {
         return $this->placeholder ?: trans('admin.input').' '.$this->label;
+    }
+
+    /**
+     * Add a divider after this field.
+     *
+     * @return $this
+     */
+    public function divider()
+    {
+        $this->form->divider();
+
+        return $this;
     }
 
     /**
@@ -1182,7 +1211,7 @@ class Field implements Renderable
      *
      * @return mixed
      */
-    protected function getElementClassString()
+    public function getElementClassString()
     {
         $elementClass = $this->getElementClass();
 
@@ -1204,7 +1233,7 @@ class Field implements Renderable
      *
      * @return string|array
      */
-    protected function getElementClassSelector()
+    public function getElementClassSelector()
     {
         $elementClass = $this->getElementClass();
 
@@ -1268,8 +1297,7 @@ class Field implements Renderable
      *
      * @return $this
      */
-    public function setGroupClass($class)
-    : self
+    public function setGroupClass($class): self
     {
         if (is_array($class)) {
             $this->groupClass = array_merge($this->groupClass, $class);
@@ -1287,8 +1315,7 @@ class Field implements Renderable
      *
      * @return string
      */
-    protected function getGroupClass($default = false)
-    : string
+    protected function getGroupClass($default = false): string
     {
         return ($default ? 'form-group ' : '').implode(' ', array_filter($this->groupClass));
     }
@@ -1317,7 +1344,7 @@ class Field implements Renderable
      *
      * @return $this
      */
-    protected function addVariables(array $variables = []): self
+    public function addVariables(array $variables = []): self
     {
         $this->variables = array_merge($this->variables, $variables);
 
@@ -1327,8 +1354,7 @@ class Field implements Renderable
     /**
      * @return string
      */
-    public function getLabelClass()
-    : string
+    public function getLabelClass(): string
     {
         return implode(' ', $this->labelClass);
     }
@@ -1338,8 +1364,7 @@ class Field implements Renderable
      *
      * @return self
      */
-    public function setLabelClass(array $labelClass)
-    : self
+    public function setLabelClass(array $labelClass): self
     {
         $this->labelClass = $labelClass;
 
@@ -1391,7 +1416,7 @@ class Field implements Renderable
      *
      * @return string
      */
-    public function setView($view): string
+    public function setView($view): self
     {
         $this->view = $view;
 
@@ -1482,6 +1507,14 @@ class Field implements Renderable
         Admin::script($this->script);
 
         return view($this->getView(), $this->variables());
+    }
+
+    /**
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View|string
+     */
+    protected function fieldRender()
+    {
+        return self::render();
     }
 
     /**

@@ -50,7 +50,7 @@ abstract class Selectable
      */
     public function __construct($multiple = false, $key = '')
     {
-        $this->key      = $key;
+        $this->key = $key ?: $this->key;
         $this->multiple = $multiple;
 
         $this->initGrid();
@@ -81,7 +81,7 @@ abstract class Selectable
             $this->appendRemoveBtn(true);
         }
 
-        $this->paginate($this->perPage)->expandFilter()->disableFeatures();
+        $this->disableFeatures()->paginate($this->perPage)->expandFilter();
 
         $displayer = $this->multiple ? Checkbox::class : Radio::class;
 
@@ -111,7 +111,7 @@ abstract class Selectable
 
         $this->model()->whereKey(Arr::wrap($values));
 
-        $this->disableFilter()->disableFeatures();
+        $this->disableFeatures()->disableFilter();
 
         if (!$this->multiple) {
             $this->disablePagination();

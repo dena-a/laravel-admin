@@ -1361,12 +1361,13 @@ class Field implements Renderable
 
     /**
      * @param array $labelClass
+     * @param bool $replace
      *
      * @return self
      */
-    public function setLabelClass(array $labelClass): self
+    public function setLabelClass(array $labelClass, $replace = false): self
     {
-        $this->labelClass = $labelClass;
+        $this->labelClass = $replace ? $labelClass : array_merge($this->labelClass, $labelClass);
 
         return $this;
     }
@@ -1506,14 +1507,18 @@ class Field implements Renderable
 
         Admin::script($this->script);
 
-        return view($this->getView(), $this->variables());
+        return Admin::component($this->getView(), $this->variables());
     }
 
     /**
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View|string
      */
-    protected function fieldRender()
+    protected function fieldRender(array $variables = [])
     {
+        if (!empty($variables)) {
+            $this->addVariables($variables);
+        }
+
         return self::render();
     }
 
